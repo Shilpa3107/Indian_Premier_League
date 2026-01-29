@@ -1,0 +1,63 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Team {
+  id        Int      @id
+  title     String
+  abbr      String
+  logoUrl   String
+  matchesAsA Match[] @relation("TeamA")
+  matchesAsB Match[] @relation("TeamB")
+  winningMatches Match[] @relation("WinningTeam")
+  players   Player[]
+  standings Standing?
+}
+
+model Player {
+  id           Int      @id
+  name         String
+  shortName    String
+  birthdate    String?
+  country      String
+  playingRole  String
+  battingStyle String?
+  bowlingStyle String?
+  teamId       Int
+  team         Team     @relation(fields: [teamId], references: [id])
+}
+
+model Match {
+  id            Int      @id
+  title         String
+  subtitle      String
+  matchNumber   String
+  format        String
+  venue         String
+  location      String
+  dateStart     DateTime
+  result        String
+  teamAId       Int
+  teamBId       Int
+  winningTeamId Int?
+  teamA         Team     @relation("TeamA", fields: [teamAId], references: [id])
+  teamB         Team     @relation("TeamB", fields: [teamBId], references: [id])
+  winningTeam   Team?    @relation("WinningTeam", fields: [winningTeamId], references: [id])
+}
+
+model Standing {
+  id         Int    @id @default(autoincrement())
+  teamId     Int    @unique
+  played     Int
+  win        Int
+  loss       Int
+  nr         Int
+  points     Int
+  netrr      Float
+  team       Team   @relation(fields: [teamId], references: [id])
+}
