@@ -12,6 +12,7 @@ const Dashboard: React.FC = () => {
     const [standings, setStandings] = useState<any[]>([]);
     const [recentMatches, setRecentMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,6 +25,7 @@ const Dashboard: React.FC = () => {
                 setRecentMatches(matchesData.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                setError('Failed to load dashboard data. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -35,6 +37,26 @@ const Dashboard: React.FC = () => {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-rose-400 font-medium">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (standings.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-text-muted">No standings data available.</p>
+                </div>
             </div>
         );
     }
@@ -123,27 +145,31 @@ const Dashboard: React.FC = () => {
                 <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
                     <Calendar className="w-5 h-4 text-accent" /> Recent Matches
                 </h3>
-                <div className="space-y-4">
-                    {recentMatches.map((match) => (
-                        <div key={match.id} className="flex items-center justify-between p-4 rounded-xl border border-border hover:bg-surface transition-colors">
-                            <div className="flex items-center gap-6 flex-1">
-                                <div className="flex items-center gap-3 justify-end w-[200px]">
-                                    <span className="font-semibold">{match.teamA.abbr}</span>
-                                    <img src={match.teamA.logoUrl} alt="" className="w-8 h-8 rounded-full bg-white p-1" />
+                {recentMatches.length === 0 ? (
+                    <div className="text-sm text-text-muted">No recent matches available.</div>
+                ) : (
+                    <div className="space-y-4">
+                        {recentMatches.map((match) => (
+                            <div key={match.id} className="flex items-center justify-between p-4 rounded-xl border border-border hover:bg-surface transition-colors">
+                                <div className="flex items-center gap-6 flex-1">
+                                    <div className="flex items-center gap-3 justify-end w-[200px]">
+                                        <span className="font-semibold">{match.teamA.abbr}</span>
+                                        <img src={match.teamA.logoUrl} alt="" className="w-8 h-8 rounded-full bg-white p-1" />
+                                    </div>
+                                    <div className="text-text-muted font-bold text-lg">VS</div>
+                                    <div className="flex items-center gap-3 w-[200px]">
+                                        <img src={match.teamB.logoUrl} alt="" className="w-8 h-8 rounded-full bg-white p-1" />
+                                        <span className="font-semibold">{match.teamB.abbr}</span>
+                                    </div>
                                 </div>
-                                <div className="text-text-muted font-bold text-lg">VS</div>
-                                <div className="flex items-center gap-3 w-[200px]">
-                                    <img src={match.teamB.logoUrl} alt="" className="w-8 h-8 rounded-full bg-white p-1" />
-                                    <span className="font-semibold">{match.teamB.abbr}</span>
+                                <div className="flex flex-col items-end">
+                                    <div className="text-sm font-medium text-emerald-400">{match.result}</div>
+                                    <div className="text-xs text-text-muted">{new Date(match.dateStart).toLocaleDateString()}</div>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <div className="text-sm font-medium text-emerald-400">{match.result}</div>
-                                <div className="text-xs text-text-muted">{new Date(match.dateStart).toLocaleDateString()}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

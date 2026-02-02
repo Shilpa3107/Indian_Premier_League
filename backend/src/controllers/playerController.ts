@@ -1,13 +1,23 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
 export const getAllPlayers = async (req: Request, res: Response) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 20;
-        const teamId = req.query.teamId ? parseInt(req.query.teamId as string) : undefined;
+        const querySchema = z.object({
+            page: z.coerce.number().int().min(1).default(1),
+            limit: z.coerce.number().int().min(1).max(200).default(20),
+            teamId: z.coerce.number().int().min(1).optional(),
+        });
+
+        const parsed = querySchema.safeParse(req.query);
+        if (!parsed.success) {
+            return res.status(400).json({ error: 'Invalid query parameters' });
+        }
+
+        const { page, limit, teamId } = parsed.data;
         const skip = (page - 1) * limit;
 
         const where = teamId ? { teamId } : {};
@@ -39,9 +49,18 @@ export const getAllPlayers = async (req: Request, res: Response) => {
 
 export const getPlayerById = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const paramsSchema = z.object({
+            id: z.coerce.number().int().min(1),
+        });
+
+        const parsed = paramsSchema.safeParse(req.params);
+        if (!parsed.success) {
+            return res.status(400).json({ error: 'Invalid player id' });
+        }
+
+        const { id } = parsed.data;
         const player = await prisma.player.findUnique({
-            where: { id: parseInt(id) },
+            where: { id },
             include: {
                 team: true,
             },

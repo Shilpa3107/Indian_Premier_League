@@ -5,6 +5,7 @@ import { Trophy, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 const Standings: React.FC = () => {
     const [standings, setStandings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchStandings = async () => {
@@ -13,6 +14,7 @@ const Standings: React.FC = () => {
                 setStandings(data);
             } catch (error) {
                 console.error('Error fetching standings:', error);
+                setError('Failed to load standings. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -24,6 +26,26 @@ const Standings: React.FC = () => {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-rose-400 font-medium">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (standings.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-text-muted">No standings available.</p>
+                </div>
             </div>
         );
     }

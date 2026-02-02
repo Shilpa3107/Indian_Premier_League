@@ -9,6 +9,8 @@ const Teams: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [playersError, setPlayersError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -20,6 +22,7 @@ const Teams: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Error fetching teams:', error);
+                setError('Failed to load teams. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -32,10 +35,13 @@ const Teams: React.FC = () => {
             const fetchPlayers = async () => {
                 setLoadingPlayers(true);
                 try {
+                    setPlayersError(null);
                     const data = await getPlayers(1, 40, selectedTeam);
                     setPlayers(data.data);
                 } catch (error) {
                     console.error('Error fetching players:', error);
+                    setPlayers([]);
+                    setPlayersError('Failed to load players for this team.');
                 } finally {
                     setLoadingPlayers(false);
                 }
@@ -48,6 +54,26 @@ const Teams: React.FC = () => {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-rose-400 font-medium">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (teams.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="glass-card p-6 text-center">
+                    <p className="text-sm text-text-muted">No teams available.</p>
+                </div>
             </div>
         );
     }
@@ -101,6 +127,14 @@ const Teams: React.FC = () => {
                 {loadingPlayers ? (
                     <div className="flex items-center justify-center h-64">
                         <div className="animate-pulse text-text-muted">Loading players...</div>
+                    </div>
+                ) : playersError ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-sm text-rose-400 font-medium">{playersError}</div>
+                    </div>
+                ) : filteredPlayers.length === 0 ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-sm text-text-muted">No players found.</div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

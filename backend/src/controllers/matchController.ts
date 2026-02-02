@@ -1,12 +1,22 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
 export const getAllMatches = async (req: Request, res: Response) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
+        const querySchema = z.object({
+            page: z.coerce.number().int().min(1).default(1),
+            limit: z.coerce.number().int().min(1).max(100).default(10),
+        });
+
+        const parsed = querySchema.safeParse(req.query);
+        if (!parsed.success) {
+            return res.status(400).json({ error: 'Invalid query parameters' });
+        }
+
+        const { page, limit } = parsed.data;
         const skip = (page - 1) * limit;
 
         const matches = await prisma.match.findMany({
@@ -37,9 +47,18 @@ export const getAllMatches = async (req: Request, res: Response) => {
 
 export const getMatchById = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const paramsSchema = z.object({
+            id: z.coerce.number().int().min(1),
+        });
+
+        const parsed = paramsSchema.safeParse(req.params);
+        if (!parsed.success) {
+            return res.status(400).json({ error: 'Invalid match id' });
+        }
+
+        const { id } = parsed.data;
         const match = await prisma.match.findUnique({
-            where: { id: parseInt(id) },
+            where: { id },
             include: {
                 teamA: true,
                 teamB: true,

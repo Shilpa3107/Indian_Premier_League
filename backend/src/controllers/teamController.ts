@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -14,9 +15,18 @@ export const getAllTeams = async (req: Request, res: Response) => {
 
 export const getTeamById = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const paramsSchema = z.object({
+            id: z.coerce.number().int().min(1),
+        });
+
+        const parsed = paramsSchema.safeParse(req.params);
+        if (!parsed.success) {
+            return res.status(400).json({ error: 'Invalid team id' });
+        }
+
+        const { id } = parsed.data;
         const team = await prisma.team.findUnique({
-            where: { id: parseInt(id) },
+            where: { id },
             include: {
                 players: true,
                 standings: true,
